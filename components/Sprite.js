@@ -5,6 +5,7 @@ import { StyleSheet, Text, View, ImageBackground, Image, TouchableOpacity, Anima
 
 
 const Sprite=({spriteBottom, spritePosition})=>{
+    
     return(
         <Image 
         source={require('../images/sprite.png')} 

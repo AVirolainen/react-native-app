@@ -1,6 +1,13 @@
 import React, {useState, useEffect} from 'react'
 import { StyleSheet, Text, View, ImageBackground, Image, TouchableOpacity, TouchableWithoutFeedback, Dimensions} from 'react-native';
 import Sprite from './Sprite';
+import Cloud from './Cloud';
+
+function randomInteger(min, max) {
+    // получить случайное число от (min-0.5) до (max+0.5)
+    let rand = min - 0.5 + Math.random() * (max - min + 1);
+    return Math.round(rand);
+  }
 
 
 const PlayField = ()=>{  
@@ -10,30 +17,58 @@ const PlayField = ()=>{
     const [spritePosition, setSpritePosition] = useState(0)
     const [isMovingLeft, setIsMovingLeft] = useState(false)
     const [isStay, setIsStay] = useState(true)
-
+    const [cloudsArray, setCloudsArray] = useState([])
     let jumpingTimerId
     let fallingTimerId
+    let cloudsTimerId
 
+    //creatng clouds
+    useEffect(()=>{
+        let tempBottom = 0
+        let tempArray = []
+        for(let i=0; i<5; i++){
+            tempArray.push([
+                randomInteger(0, screenWidth-150), tempBottom
+            ])
+            tempBottom += 160
+        }
+        console.log(tempArray)
+        setCloudsArray(tempArray)
+    }, [screenWidth])
 
+    useEffect(()=>{
+        cloudsTimerId = setTimeout(()=>{
+            setCloudsArray(cloudsArray.map((item)=>{
+                return [item[0], item[1]-5]
+            }))
+        }, 60)
+
+        return ()=>{clearInterval(cloudsTimerId)}
+    }, [cloudsArray])
 
     //jumping mechanic
     useEffect(()=>{
         if(isJumping){
+
             
             jumpingTimerId = setInterval(()=>{
-                setHeight(height => height+3)
+                setHeight(height => height+5)
+                
                 if(height==60){
                     setIsJumping(isJumping=>!isJumping)
                 }
+
             }, 60) 
             return ()=>{clearInterval(jumpingTimerId)}
         }
         else{
             fallingTimerId = setInterval(()=>{
-                setHeight(height => height-3)
+                setHeight(height => height-5)
                 if(height==0){
                     setIsJumping(isJumping=>!isJumping)
                 }
+
+        
             }, 60)
             return ()=>{clearInterval(fallingTimerId)}
         }
@@ -69,7 +104,12 @@ const PlayField = ()=>{
     
         <ImageBackground source={require('../images/field_background.jpeg')} style={styles.backgroundImage} >
             <View style={styles.container}>
-                <Sprite spriteBottom={height} spritePosition={spritePosition}/>
+                <Sprite spriteBottom={height} spritePosition={spritePosition}/> 
+                {
+                    cloudsArray.map(item=>{
+                        return <Cloud cloudLeft={item[0]} cloudBottom={item[1]}/>
+                    })
+                }
 
                 <View style={{
                     width: 100,
