@@ -8,7 +8,7 @@ const Cloud=({cloudBottom, cloudLeft})=>{
         <Image 
         source={require('./sprites/cloud.png')} 
         style={{
-            width: 150,
+            width: 125,
             height: 100,
             resizeMode: "stretch",
             position: "absolute",

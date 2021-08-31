@@ -12,25 +12,27 @@ function randomInteger(min, max) {
 
 const PlayField = ()=>{  
     const screenWidth = Math.round(Dimensions.get('window').width);
+    const screenHeight = Math.round(Dimensions.get('window').height);
     const [height, setHeight] = useState(0)
     const [isJumping, setIsJumping] = useState(true)
     const [spritePosition, setSpritePosition] = useState(0)
     const [isMovingLeft, setIsMovingLeft] = useState(false)
     const [isStay, setIsStay] = useState(true)
     const [cloudsArray, setCloudsArray] = useState([])
+    const [jumpBottom, setJumpBottom] = useState(0) 
     let jumpingTimerId
     let fallingTimerId
     let cloudsTimerId
 
     //creatng clouds
     useEffect(()=>{
-        let tempBottom = 0
+        let tempBottom = 100
         let tempArray = []
-        for(let i=0; i<5; i++){
+        for(let i=0; i<8; i++){
             tempArray.push([
                 randomInteger(0, screenWidth-150), tempBottom
             ])
-            tempBottom += 160
+            tempBottom += 100
         }
         console.log(tempArray)
         setCloudsArray(tempArray)
@@ -38,8 +40,15 @@ const PlayField = ()=>{
 
     useEffect(()=>{
         cloudsTimerId = setTimeout(()=>{
-            setCloudsArray(cloudsArray.map((item)=>{
-                return [item[0], item[1]-5]
+            let tempArray = cloudsArray
+            if(cloudsArray[0][1]<0){
+                tempArray.shift()
+                tempArray.push([
+                    randomInteger(0, screenWidth-150), screenHeight
+                ])
+            }
+            setCloudsArray(tempArray.map((item)=>{
+                return [item[0], item[1]-2]
             }))
         }, 60)
 
@@ -49,12 +58,11 @@ const PlayField = ()=>{
     //jumping mechanic
     useEffect(()=>{
         if(isJumping){
-
-            
             jumpingTimerId = setInterval(()=>{
-                setHeight(height => height+5)
+                setHeight(height => height+1)
                 
-                if(height==60){
+                if(height+5>(jumpBottom+120)){
+                    setHeight(height => height-10)
                     setIsJumping(isJumping=>!isJumping)
                 }
 
@@ -62,10 +70,26 @@ const PlayField = ()=>{
             return ()=>{clearInterval(jumpingTimerId)}
         }
         else{
+
+            cloudsArray.map((item)=>{
+                let xCoord = item[0]
+                let yCoord = item[1]
+                if(
+                    (height-5<yCoord+100 && height+5>yCoord) &&
+                    (spritePosition<xCoord+125 && spritePosition>xCoord)
+                ){
+                    setJumpBottom(yCoord)
+                    console.log("jump")
+                }
+            })
+
             fallingTimerId = setInterval(()=>{
-                setHeight(height => height-5)
-                if(height==0){
+               
+
+                setHeight(height => height-1)
+                if(height<jumpBottom+5){
                     setIsJumping(isJumping=>!isJumping)
+                    setHeight(height => height+10)
                 }
 
         
@@ -106,8 +130,8 @@ const PlayField = ()=>{
             <View style={styles.container}>
                 <Sprite spriteBottom={height} spritePosition={spritePosition}/> 
                 {
-                    cloudsArray.map(item=>{
-                        return <Cloud cloudLeft={item[0]} cloudBottom={item[1]}/>
+                    cloudsArray.map((item, i)=>{
+                        return <Cloud cloudLeft={item[0]} cloudBottom={item[1]} key={i}/>
                     })
                 }
 
