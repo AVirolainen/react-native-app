@@ -1,11 +1,11 @@
-import { StatusBar } from 'expo-status-bar';
+
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { StyleSheet, Text, View, ImageBackground, Image, TouchableOpacity, Animated} from 'react-native';
+
+import {Image} from 'react-native';
 
 
-const Sprite=({spriteBottom, spritePosition})=>{
-    
+const Sprite=({spriteBottom, spritePosition,  isLeft})=>{
+    let transformValue = isLeft ? { scaleX: -1, scaleY: 1 } : { scaleX: 1, scaleY: 1 }
     return(
         <Image 
         source={require('../images/sprite.png')} 
@@ -15,7 +15,8 @@ const Sprite=({spriteBottom, spritePosition})=>{
             resizeMode: "stretch",
             position: "absolute",
             bottom: spriteBottom,
-            left: spritePosition
+            left: spritePosition,
+            transform: [transformValue]
         }}/>
     )
 }

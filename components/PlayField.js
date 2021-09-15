@@ -20,6 +20,7 @@ const PlayField = ()=>{
     const [isStay, setIsStay] = useState(true)
     const [cloudsArray, setCloudsArray] = useState([])
     const [jumpBottom, setJumpBottom] = useState(0) 
+    const [left, setIsLeft] = useState(false)
     let jumpingTimerId
     let fallingTimerId
     let cloudsTimerId
@@ -29,86 +30,93 @@ const PlayField = ()=>{
         let tempBottom = 50
         let tempArray = []
         for(let i=0; i<4; i++){
-            tempArray.push([
-                randomInteger(0, screenWidth-150), tempBottom
-            ])
+            tempArray.push([randomInteger(0, screenWidth-150), tempBottom])
             tempBottom += 200
         }
         console.log(tempArray)
         setCloudsArray(tempArray)
     }, [screenWidth])
 
+    const cloudsMoving = ()=>{
+        let tempArray = cloudsArray
+        tempArray.shift()
+        setCloudsArray(tempArray.map((item)=>{
+            return [item[0], item[1]-200]
+        }))
+    }
+
     useEffect(()=>{
         cloudsTimerId = setTimeout(()=>{
             let tempArray = cloudsArray
-            if(cloudsArray[0][1]<0){
-                tempArray.shift()
-                tempArray.push([
-                    randomInteger(0, screenWidth-150), screenHeight
-                ])
-            }
-
+            setCloudsArray(tempArray.map((item)=>{
+                return [item[0], item[1]-1]
+            }))
         }, 60)
 
-        return ()=>{clearInterval(cloudsTimerId)}
+        return (()=>{clearInterval(cloudsTimerId)})
+
     }, [cloudsArray])
+
+    const checkForFalling= ()=>{
+        for(let i=0; i<cloudsArray.length; i++){
+            let xCoord = cloudsArray[i][0]
+            let yCoord = cloudsArray[i][1]
+    
+            if(
+                (height<yCoord+40 && height>yCoord) &&
+                (spritePosition<xCoord+125 && spritePosition+125>xCoord)
+            ){
+                
+                console.log("jump")
+                
+                setJumpBottom(height+100)
+    
+                setIsJumping(isJumping=>!isJumping)
+                setHeight(height => height+1)
+
+                break
+            }
+        }
+        
+    }
 
     //jumping mechanic
     useEffect(()=>{
         if(isJumping){
             jumpingTimerId = setInterval(()=>{
-                setHeight(height => height+5)
+                setHeight(height => height+2)
                 
                 if(height+5>(jumpBottom+120)){
                     setHeight(height => height-10)
                     setIsJumping(isJumping=>!isJumping)
                 }
 
-            }, 60) 
+            }, 0) 
             return ()=>{clearInterval(jumpingTimerId)}
         }
         else{
             fallingTimerId = setInterval(()=>{
-                setHeight(height => height-5)
+                setHeight(height => height-2)
 
-                let xCoord = cloudsArray[0][0]
-                let yCoord = cloudsArray[0][1]
+                checkForFalling()
 
-                if(
-                    (height-5<yCoord+100 && height+5>yCoord) &&
-                    (spritePosition+100<xCoord+125 && spritePosition+125>xCoord)
-                ){
-                    setJumpBottom(yCoord+30)
-                    console.log("jump")
-
-                    let tempArray = cloudsArray
-                    tempArray.shift()
-                    tempArray.push([
-                        randomInteger(0, screenWidth-150), screenHeight
-                    ])
-                    setCloudsArray(tempArray.map((item)=>{
-                        return [item[0], item[1]-200]
-                    }))
-                    
-                }
-
-                if(height<jumpBottom+5){
+                if(height<0){
                     setIsJumping(isJumping=>!isJumping)
                     setHeight(height => height+10)
                 }
 
         
-            }, 60)
+            }, 0)
             return ()=>{clearInterval(fallingTimerId)}
         }
     }, [height])
 
     useEffect(()=>{
         if(!isMovingLeft && !isStay){
-            setSpritePosition(spritePosition=>spritePosition+1)
+            setSpritePosition(spritePosition=>spritePosition+3)
         }
         else if(isMovingLeft && !isStay){
-            setSpritePosition(spritePosition=>spritePosition-1)
+            setSpritePosition(spritePosition=>spritePosition-3)
         }
     }, [spritePosition, isStay])
 
@@ -117,9 +125,11 @@ const PlayField = ()=>{
         setIsStay(false)
         if(direction == "right"){
             setIsMovingLeft(false)
+            setIsLeft(true)
         }
         else{
             setIsMovingLeft(true)
+            setIsLeft(false)
         }
     }
 
@@ -133,7 +143,7 @@ const PlayField = ()=>{
     
         <ImageBackground source={require('../images/field_background.jpeg')} style={styles.backgroundImage} >
             <View style={styles.container}>
-                <Sprite spriteBottom={height} spritePosition={spritePosition}/> 
+                <Sprite spriteBottom={height} spritePosition={spritePosition} isLeft={left}/> 
                 {
                     cloudsArray.map((item, i)=>{
                         return <Cloud cloudLeft={item[0]} cloudBottom={item[1]} key={i}/>
